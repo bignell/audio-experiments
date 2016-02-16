@@ -1,0 +1,31 @@
+// Source File
+const src = 'fantaisie-impromptu.mp3';
+
+// Create and append audio element
+let audio = new Audio(src);
+audio.controls = true;
+document.body.appendChild(audio);
+
+// Establish AudioContext, with a fallback for early webkit
+const audioContext = new (window.AudioContext || window.webkitAudioContext);
+
+// Establish audio element as source node
+const source = audioContext.createMediaElementSource(audio);
+
+// Add Analyser node to audioContext
+const analyser = audioContext.createAnalyser();
+const dataSize = analyser.frequencyBinCount;
+let analyserData = {
+  freq: new Uint8Array(dataSize),
+  time: new Uint8Array(dataSize),
+};
+
+// Connect audio nodes
+source.connect(analyser);
+analyser.connect(audioContext.destination);
+
+setInterval(function(){
+  analyser.getByteFrequencyData(analyserData.freq);
+  analyser.getByteTimeDomainData(analyserData.time);
+  console.log(analyserData);
+}, 1000);
