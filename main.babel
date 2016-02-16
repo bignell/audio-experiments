@@ -14,6 +14,9 @@ const source = audioContext.createMediaElementSource(audio);
 
 // Add Analyser node to audioContext
 const analyser = audioContext.createAnalyser();
+analyser.fftSize = 256;
+
+// Setup analyser data arrays
 const dataSize = analyser.frequencyBinCount;
 let analyserData = {
   freq: new Uint8Array(dataSize),
@@ -24,8 +27,29 @@ let analyserData = {
 source.connect(analyser);
 analyser.connect(audioContext.destination);
 
-setInterval(function(){
+// Create and add canvas
+let canvas = document.createElement('canvas');
+canvas.width = document.body.clientWidth;
+canvas.height = document.body.clientHeight;
+document.body.appendChild(canvas);
+
+// Establish 2d canvas context
+let canvasContext = canvas.getContext('2d');
+
+const draw = function draw() {
+  requestAnimationFrame(draw);
   analyser.getByteFrequencyData(analyserData.freq);
-  analyser.getByteTimeDomainData(analyserData.time);
-  console.log(analyserData);
-}, 1000);
+  canvasContext.fillStyle = '#eee';
+  canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+  const barWidth = canvas.width / dataSize;
+  let x = 0;
+  for (let i = 0; i < dataSize; i++) {
+    const freqPercent = analyserData.freq[i] / 256;
+    const barHeight = canvas.height * freqPercent;
+    canvasContext.fillStyle = `hsla(153, 74%, 50%, ${freqPercent})`;
+    canvasContext.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+    x += barWidth;
+  }
+};
+
+draw();
